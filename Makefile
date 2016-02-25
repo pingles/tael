@@ -15,7 +15,7 @@ release: $(wildcard src/tael/*.go src/tael/**/*.go)
 	${LINUX} build -o ${RELEASE_DIR}/release/linux/tael tael
 
 test: $(wildcard src/tael/*.go src/tael/**/*.go)
-	go test tael
+	${GO} test tael
 
 clean:
 	rm -rf ./bin ./pkg ${RELEASE_DIR}
