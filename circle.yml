@@ -1,2 +1,5 @@
 test:
-  make test
+  override:
+    make test
+  post:
+    RELEASE_DIR=$CIRCLE_ARTIFACTS make release
