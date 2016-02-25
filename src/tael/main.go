@@ -67,8 +67,10 @@ func createFormatter() Formatter {
 func main() {
 	kingpin.Parse()
 	if *query == "" {
-		kingpin.FatalUsage("query cannot be empty.")
-		os.Exit(1)
+		kingpin.FatalUsage("query cannot be blank.")
+	}
+	if *host == "" {
+		kingpin.FatalUsage("host cannot be blank.")
 	}
 
 	entries := PerformSearch(*index, *query, *host)
