@@ -12,7 +12,7 @@ RELEASE_DIR?=./release
 release: $(wildcard src/tael/*.go src/tael/**/*.go)
 	mkdir -p ${RELEASE_DIR}/osx ${RELEASE_DIR}/linux
 	${OSX} build -o ${RELEASE_DIR}/osx/tael tael
-	${LINUX} build -o ${RELEASE_DIR}/release/linux/tael tael
+	${LINUX} build -o ${RELEASE_DIR}/linux/tael tael
 
 test: $(wildcard src/tael/*.go src/tael/**/*.go)
 	${GO} test tael
