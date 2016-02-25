@@ -1,0 +1,51 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"path": "github.com/alecthomas/template",
+			"revision": "14fd436dd20c3cc65242a9f396b61bfc8a3926fc",
+			"revisionTime": "2015-12-01T11:57:09+11:00"
+		},
+		{
+			"path": "github.com/alecthomas/template/parse",
+			"revision": "14fd436dd20c3cc65242a9f396b61bfc8a3926fc",
+			"revisionTime": "2015-12-01T11:57:09+11:00"
+		},
+		{
+			"path": "github.com/alecthomas/units",
+			"revision": "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a",
+			"revisionTime": "2015-10-22T17:55:26+11:00"
+		},
+		{
+			"path": "github.com/araddon/gou",
+			"revision": "1fd0868458fb611a8a956fae0ed0d0cc657cd321",
+			"revisionTime": "2016-02-03T17:04:11-08:00"
+		},
+		{
+			"path": "github.com/bitly/go-hostpool",
+			"revision": "d0e59c22a56e8dadfed24f74f452cea5a52722d2",
+			"revisionTime": "2015-03-31T09:04:00-04:00"
+		},
+		{
+			"path": "github.com/mattbaird/elastigo/lib",
+			"revision": "6846107dcb6b61f78681686b1d6b27787aa8f881",
+			"revisionTime": "2016-02-24T14:30:37-07:00"
+		},
+		{
+			"path": "github.com/willf/bitset",
+			"revision": "2e6e8094ef4745224150c88c16191c7dceaad16f",
+			"revisionTime": "2016-02-25T10:03:13-05:00"
+		},
+		{
+			"path": "github.com/willf/bloom",
+			"revision": "aa3071d9203598166c09553d43e74b588c3d91be",
+			"revisionTime": "2016-02-25T09:53:07-05:00"
+		},
+		{
+			"path": "gopkg.in/alecthomas/kingpin.v2",
+			"revision": "8cccfa8eb2e3183254457fb1749b2667fbc364c7",
+			"revisionTime": "2016-02-17T20:03:01+11:00"
+		}
+	]
+}
