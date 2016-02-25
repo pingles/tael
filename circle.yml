@@ -1,5 +1,5 @@
 test:
   override:
-    make test
+    - make test
   post:
-    RELEASE_DIR=$CIRCLE_ARTIFACTS make release
+    - RELEASE_DIR=$CIRCLE_ARTIFACTS make release
