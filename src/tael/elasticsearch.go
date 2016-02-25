@@ -37,9 +37,9 @@ func createSearch(index, query string, now time.Time) *elastigo.SearchDsl {
 	return search
 }
 
-func PerformSearch(index, query string) <-chan *LogEntry {
+func PerformSearch(index, query string, host string) <-chan *LogEntry {
 	c := elastigo.NewConn()
-	c.SetFromUrl(*host)
+	c.SetFromUrl(host)
 
 	filter := bloom.New(20*1000, 5)
 
