@@ -12,10 +12,12 @@ RELEASE_DIR?=./release
 ${RELEASE_DIR}/osx/tael: $(wildcard src/tael/*.go src/tael/**/*.go)
 	mkdir -p ${RELEASE_DIR}/osx
 	${OSX} build -o ${RELEASE_DIR}/osx/tael tael
+	tar czf ${RELEASE_DIR}/osx/tael.tar.gz ${RELEASE_DIR}/osx/tael
 
 ${RELEASE_DIR}/linux/tael: $(wildcard src/tael/*.go src/tael/**/*.go)
 	mkdir -p ${RELEASE_DIR}/linux
 	${LINUX} build -o ${RELEASE_DIR}/linux/tael tael
+	tar czf ${RELEASE_DIR}/linux/tael.tar.gz ${RELEASE_DIR}/linux/tael
 
 release: ${RELEASE_DIR}/linux/tael ${RELEASE_DIR}/osx/tael
 
