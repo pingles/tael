@@ -15,6 +15,24 @@ $ tael -f ioexception
 * `-j` Outputs log entries as JSON (potentially to pipe into `jq` or other commands)
 * `-l` Allows specification of the output format using Go's mustach-like templating. For example, to output just the entry IDs you could use: `tael -f -l "{{.Id}}" ...`
 
+### Full usage:
+
+```
+usage: tael [<flags>] [<query>]
+
+Flags:
+      --help           Show context-sensitive help (also try --help-long and --help-man).
+      --host=HOST      aws elasticsearch url
+  -f, --follow         follow log
+      --index="*"      elasticsearch index
+  -n, --number=10      number of results to retrieve
+  -j, --json           output as json
+  -l, --layout=LAYOUT  custom templated output
+
+Args:
+  [<query>]  elasticsearch query
+```
+
 ## Configuring
 
 `tael` expects your ElasticSearch indices contain the following fields:
