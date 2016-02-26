@@ -28,9 +28,24 @@
 			"revisionTime": "2015-03-31T09:04:00-04:00"
 		},
 		{
+			"path": "github.com/fatih/color",
+			"revision": "4f7bcef27eec7925456d0c30c5e7b0408b3339be",
+			"revisionTime": "2016-02-25T00:11:55+02:00"
+		},
+		{
 			"path": "github.com/mattbaird/elastigo/lib",
 			"revision": "6846107dcb6b61f78681686b1d6b27787aa8f881",
 			"revisionTime": "2016-02-24T14:30:37-07:00"
+		},
+		{
+			"path": "github.com/mattn/go-colorable",
+			"revision": "9cbef7c35391cca05f15f8181dc0b18bc9736dbb",
+			"revisionTime": "2016-02-20T16:59:35+09:00"
+		},
+		{
+			"path": "github.com/mattn/go-isatty",
+			"revision": "56b76bdf51f7708750eac80fa38b952bb9f32639",
+			"revisionTime": "2015-12-11T09:06:21+09:00"
 		},
 		{
 			"path": "github.com/willf/bitset",

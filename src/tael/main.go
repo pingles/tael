@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/fatih/color"
 	"os"
+	"strings"
 	"text/template"
 )
 
@@ -35,8 +37,28 @@ func (j *JsonFormatter) Write(e *LogEntry) {
 
 type StandardFormatter struct{}
 
+func colourLevel(e *LogEntry) string {
+	lname := strings.ToUpper(e.LevelName)
+	if strings.Contains(lname, "INFO") {
+		return color.GreenString("%-8s", lname)
+	}
+	if strings.Contains(lname, "WARN") {
+		return color.YellowString("%-8s", lname)
+	}
+	if strings.Contains(lname, "ERROR") {
+		return color.RedString("%-8s", lname)
+	}
+	if strings.Contains(lname, "DEBUG") {
+		return color.BlueString("%-8s", lname)
+	}
+
+	return fmt.Sprintf("%-8s", e.LevelName)
+}
+
 func (f *StandardFormatter) Write(e *LogEntry) {
-	fmt.Println(e.String())
+	time := color.CyanString(e.Time.Format("2006-01-02 15:04:05.000"))
+	line := fmt.Sprintf("%s: %23s %s %s", color.BlueString(e.Id), time, colourLevel(e), e.Message)
+	fmt.Println(line)
 }
 
 type TemplatedFormatter struct {
