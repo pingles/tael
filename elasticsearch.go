@@ -53,7 +53,7 @@ func PerformSearch(host string, search *elastigo.SearchDsl) <-chan *LogEntry {
 
 	entriesCh := make(chan *LogEntry)
 	go func() {
-		for {
+		for _ = range time.Tick(time.Second) {
 			result, err := search.Result(c)
 			if err != nil {
 				return
