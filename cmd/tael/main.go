@@ -3,6 +3,7 @@ package main
 import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"github.com/pingles/tael"
+	"time"
 )
 
 var (
@@ -33,7 +34,8 @@ func main() {
 		kingpin.FatalUsage("host cannot be blank.")
 	}
 
-	entries := tael.PerformSearch(*index, *query, *host)
+	search := tael.NewSearch(*index, *query, time.Now())
+	entries := tael.PerformSearch(*host, search)
 
 	n := 0
 

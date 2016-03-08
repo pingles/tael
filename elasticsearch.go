@@ -27,7 +27,15 @@ func (e *LogEntry) String() string {
 	return fmt.Sprintf("%s %s", e.Header(), e.Message)
 }
 
-func createSearch(index, query string, now time.Time) *elastigo.SearchDsl {
+func NewSearchWithFilters(index, query string, now time.Time, filters map[string]string) *elastigo.SearchDsl {
+	s := NewSearch(index, query, now)
+	for k, v := range filters {
+		s.Filter(elastigo.Filter().Term(k, v))
+	}
+	return s
+}
+
+func NewSearch(index, query string, now time.Time) *elastigo.SearchDsl {
 	from := now.Add(-10 * time.Minute)
 	search := elastigo.Search(index)
 	fromFilter := elastigo.Filter().Range("@timestamp", from, nil, now, nil, "UTC")
@@ -37,7 +45,7 @@ func createSearch(index, query string, now time.Time) *elastigo.SearchDsl {
 	return search
 }
 
-func PerformSearch(index, query string, host string) <-chan *LogEntry {
+func PerformSearch(host string, search *elastigo.SearchDsl) <-chan *LogEntry {
 	c := elastigo.NewConn()
 	c.SetFromUrl(host)
 
@@ -46,7 +54,6 @@ func PerformSearch(index, query string, host string) <-chan *LogEntry {
 	entriesCh := make(chan *LogEntry)
 	go func() {
 		for {
-			search := createSearch(index, query, time.Now())
 			result, err := search.Result(c)
 			if err != nil {
 				return

@@ -46,7 +46,7 @@ func colourLevel(e *LogEntry) string {
 
 func (f *StandardFormatter) Write(e *LogEntry) {
 	time := color.CyanString(e.Time.Format("2006-01-02 15:04:05.000"))
-	line := fmt.Sprintf("%s: %23s %s %s", color.BlueString(e.Id), time, colourLevel(e), e.Message)
+	line := fmt.Sprintf("%32s %s %s", time, colourLevel(e), e.Message)
 	fmt.Println(line)
 }
 
