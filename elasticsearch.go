@@ -1,4 +1,4 @@
-package main
+package tael
 
 import (
 	"encoding/json"

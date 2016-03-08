@@ -4,7 +4,7 @@ GO=${GOOPTS} go
 .PHONY: release
 
 tael: $(wildcard src/tael/*.go src/tael/**/*.go)
-	${GO} build -o tael
+	${GO} build -o tael ./cmd/tael
 
 test: $(wildcard src/tael/*.go src/tael/**/*.go)
 	${GO} test tael
