@@ -3,10 +3,10 @@ GO=${GOOPTS} go
 
 .PHONY: release
 
-tael: $(wildcard src/tael/*.go src/tael/**/*.go)
+tael: $(shell find . -name '*.go')
 	${GO} build -o tael ./cmd/tael
 
-test: $(wildcard src/tael/*.go src/tael/**/*.go)
+test: $(shell find . -name '*.go')
 	${GO} test tael
 
 clean:

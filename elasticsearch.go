@@ -1,22 +1,28 @@
 package tael
 
 import (
+	"bytes"
+	"errors"
 	"encoding/json"
+	"path"
 	"fmt"
-	elastigo "github.com/mattbaird/elastigo/lib"
 	"github.com/willf/bloom"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"time"
 )
 
 type LogEntry struct {
-	Id            string
+	Id            string    `json:"id"`
 	Time          time.Time `json:"@timestamp"`
 	Message       string    `json:"message"`
 	LevelName     string    `json:"level_name"`
 	Level         int       `json:"level"`
 	ImageName     string    `json:"image_name"`
 	ContainerName string    `json:"container_name"`
+	LogName       string    `json:"logname"`
 }
 
 func (e *LogEntry) Header() string {
@@ -27,54 +33,155 @@ func (e *LogEntry) String() string {
 	return fmt.Sprintf("%s %s", e.Header(), e.Message)
 }
 
-func NewSearchWithFilters(index, query string, now time.Time, filters map[string]string) *elastigo.SearchDsl {
-	s := NewSearch(index, query, now)
-	for k, v := range filters {
-		s.Filter(elastigo.Filter().Term(k, v))
+
+
+type queryString struct {
+	Query string `json:"query"`
+}
+
+type searchQuery struct {
+	QueryString *queryString `json:"query_string"`
+}
+
+
+type searchRequest struct {
+	Query *searchQuery           `json:"query"`
+	Size  int32                  `json:"size"`
+	Sort  map[string]interface{} `json:"sort"`
+}
+
+
+type Search struct {
+	Host        string
+	Index       string
+
+	// query will be parsed using Lucene syntax
+	QueryString string
+
+	Size  int32
+	From  int32
+}
+
+func (s *Search) url() string {
+	return fmt.Sprintf("%s/%s", s.Host, path.Join(s.Index, "_search"))
+}
+
+// builds the search query payload
+func (s *Search) query() *searchRequest {
+	return &searchRequest{
+		Query: &searchQuery{
+			QueryString: &queryString{
+				Query: s.QueryString,
+			},
+		},
+		Size: s.Size,
+		Sort: map[string]interface{}{
+			"@timestamp": map[string]string {
+				"order": "desc",
+				"unmapped_type": "boolean",
+			},
+		},
 	}
-	return s
 }
 
-func NewSearch(index, query string, now time.Time) *elastigo.SearchDsl {
-	from := now.Add(-10 * time.Minute)
-	search := elastigo.Search(index)
-	fromFilter := elastigo.Filter().Range("@timestamp", from, nil, now, nil, "UTC")
-	search.Filter(fromFilter)
-	search.Search(query)
-	search.Sort(elastigo.Sort("@timestamp").Desc())
-	return search
+func (s *Search) body() (io.Reader, error) {
+	bs, err := json.Marshal(s.query())
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("QUERY:", string(bs))
+	return bytes.NewReader(bs), nil
 }
 
-func PerformSearch(host string, search *elastigo.SearchDsl) <-chan *LogEntry {
-	c := elastigo.NewConn()
-	c.SetFromUrl(host)
+const (
+	DefaultSize = 20
+)
 
+func NewSearchWithFilters(host, index, query string, now time.Time, filters map[string]string) *Search {
+	return &Search{
+		Host: host,
+		Index: index,
+		Size: DefaultSize,
+		QueryString: query,
+	}
+}
+
+func NewSearch(host, index, query string, now time.Time) *Search {
+	return &Search{
+		Host: host,
+		Index: index,
+		Size: DefaultSize,
+		QueryString: query,
+	}
+}
+
+
+
+type Hit struct {
+	Index  string   `json:"_index"`
+	Type   string   `json:"_type"`
+	Id     string   `json:"_id"`
+	Score  float32  `json:"_score"`
+	Source map[string]interface{} `json:"_source"`
+}
+
+type searchHits struct {
+	Hits []*Hit `json:"hits"`
+}
+
+type searchResp struct {
+	Hits *searchHits `json:"hits"`
+}
+
+func ExecuteSearch(search *Search) ([]*Hit, error) {
+	body, err := search.body()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.Post(search.url(), "application/json", body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode > 200 {
+		return nil, errors.New(fmt.Sprintf("unexpected response: %s", string(bytes)))
+	}
+
+	var s searchResp
+	err = json.Unmarshal(bytes, &s)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Hits.Hits, nil
+}
+
+func StreamSearch(search *Search) <-chan *Hit {
 	filter := bloom.New(20*1000, 5)
 
-	entriesCh := make(chan *LogEntry)
+	entriesCh := make(chan *Hit)
 	go func() {
 		for _ = range time.Tick(time.Second) {
-			result, err := search.Result(c)
+			fmt.Println("running search")
+			results, err := ExecuteSearch(search)
 			if err != nil {
-				return
+				panic(err)
 			}
 
-			for i := len(result.Hits.Hits) - 1; i > 0; i-- {
-				hit := result.Hits.Hits[i]
-				if filter.Test([]byte(hit.Id)) {
+			for i := len(results) - 1; i > 0; i-- {
+				hit := results[i]
+				idBytes := []byte(hit.Id)
+
+				if filter.Test(idBytes) {
 					continue
 				}
-
-				var e LogEntry
-				err := json.Unmarshal(*hit.Source, &e)
-				e.Id = hit.Id
-
-				if err != nil {
-					return
-				}
-
-				entriesCh <- &e
-				filter.Add([]byte(hit.Id))
+				entriesCh <- hit
+				filter.Add(idBytes)
 			}
 		}
 	}()

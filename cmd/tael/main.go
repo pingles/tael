@@ -13,16 +13,37 @@ var (
 	numberOfResults = kingpin.Flag("number", "number of results to retrieve").Default("10").Short('n').Int()
 	outputJson      = kingpin.Flag("json", "output as json").Short('j').Bool()
 	layout          = kingpin.Flag("layout", "custom templated output").Short('l').String()
-	query           = kingpin.Arg("query", "elasticsearch query").String()
+	query           = kingpin.Flag("query", "elasticsearch query").String()
+	filters         = kingpin.Arg("filter", "field filter, name=value").StringMap()
 )
 
-func createFormatter() tael.Formatter {
+func createFormatter() Formatter {
 	if *outputJson {
-		return &tael.JsonFormatter{}
+		return &JsonFormatter{}
 	} else if *layout != "" {
-		return tael.NewTemplatedFormatter(*layout)
+		return NewTemplatedFormatter(*layout)
 	}
-	return &tael.StandardFormatter{}
+	return &StandardFormatter{}
+}
+
+type logMessage struct {
+	Message   string
+	Timestamp time.Time
+	LevelName string
+	LogName   string
+}
+func newLogMessageFromHit(hit *tael.Hit) (*logMessage, error) {
+	t, err := time.Parse("2006-01-02T15:04:05.000Z", hit.Source["@timestamp"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	return &logMessage{
+		Message: hit.Source["message"].(string),
+		Timestamp: t,
+		LogName: hit.Source["logname"].(string),
+		LevelName: hit.Source["level_name"].(string),
+	}, nil
 }
 
 func main() {
@@ -34,18 +55,20 @@ func main() {
 		kingpin.FatalUsage("host cannot be blank.")
 	}
 
-	search := tael.NewSearch(*index, *query, time.Now())
-	entries := tael.PerformSearch(*host, search)
-
-	n := 0
+	var search *tael.Search
+	if len(*filters) == 0 {
+		search = tael.NewSearch(*host, *index, *query, time.Now())
+	} else {
+		search = tael.NewSearchWithFilters(*host, *index, *query, time.Now(), *filters)
+	}
 
 	formatter := createFormatter()
-	for e := range entries {
-		formatter.Write(e)
-		n += 1
-
-		if !*follow && n == *numberOfResults {
-			return
+	for hit := range tael.StreamSearch(search) {
+		msg, err := newLogMessageFromHit(hit)
+		if err != nil {
+			panic(err)
 		}
+		formatter.Write(msg)
 	}
+
 }
