@@ -89,7 +89,6 @@ func (s *Search) body() (io.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("QUERY:", string(bs))
 	return bytes.NewReader(bs), nil
 }
 
@@ -167,7 +166,6 @@ func StreamSearch(search *Search) <-chan *Hit {
 	entriesCh := make(chan *Hit)
 	go func() {
 		for _ = range time.Tick(time.Second) {
-			fmt.Println("running search")
 			results, err := ExecuteSearch(search)
 			if err != nil {
 				panic(err)
