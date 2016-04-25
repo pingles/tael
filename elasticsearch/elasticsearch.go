@@ -48,7 +48,7 @@ type searchResp struct {
 	Hits *searchHits `json:"hits"`
 }
 
-func ExecuteSearch(search *Search) ([]*Hit, error) {
+func ExecuteSearch(search *SearchContext) ([]*Hit, error) {
 	body, err := search.body()
 	if err != nil {
 		return nil, err
@@ -76,12 +76,12 @@ func ExecuteSearch(search *Search) ([]*Hit, error) {
 	return s.Hits.Hits, nil
 }
 
-func StreamSearch(search *Search) <-chan *Hit {
+func StreamSearch(search *SearchContext) <-chan *Hit {
 	filter := bloom.New(20*1000, 5)
 
 	entriesCh := make(chan *Hit)
 	go func() {
-		for _ = range time.Tick(time.Second) {
+		for _ = range time.Tick(5 * time.Second) {
 			results, err := ExecuteSearch(search)
 			if err != nil {
 				panic(err)

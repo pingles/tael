@@ -14,7 +14,7 @@ var (
 	numberOfResults = kingpin.Flag("number", "number of results to retrieve").Default("10").Short('n').Int()
 	outputJson      = kingpin.Flag("json", "output as json").Short('j').Bool()
 	layout          = kingpin.Flag("layout", "custom templated output").Short('l').String()
-	query           = kingpin.Flag("query", "elasticsearch query").String()
+	query           = kingpin.Flag("query", "elasticsearch query").Default("*").String()
 	filters         = kingpin.Arg("filter", "field filter, name=value").StringMap()
 )
 
@@ -62,27 +62,47 @@ func newLogMessageFromHit(hit *es.Hit) (*logMessage, error) {
 
 func main() {
 	kingpin.Parse()
-	if *query == "" {
-		kingpin.FatalUsage("query cannot be blank.")
-	}
 	if *host == "" {
 		kingpin.FatalUsage("host cannot be blank.")
 	}
 
-	var search *es.Search
-	if len(*filters) == 0 {
-		search = es.NewSearch(*host, *index, *query, time.Now())
-	} else {
-		search = es.NewSearchWithFilters(*host, *index, *query, time.Now(), *filters)
+	mustFilters := make([]es.MustFilter, len(*filters))
+	i := 0
+	for fieldName, fieldQuery := range *filters {
+		mustFilters[i] = &es.MustQuery{
+			Field: fieldName,
+			MatchType: es.MatchPhrase,
+			Query: fieldQuery,
+		}
+		i = i + 1
 	}
 
+	search := &es.Search{
+		Size: es.DefaultSize,
+		Sort: &es.Sort{
+			Field: "@timestamp",
+			Order: es.Descending,
+		},
+		Query: &es.Query{
+			Filtered: &es.FilteredQuery{
+				Filter: &es.Filter{
+					Bool: &es.Bool{
+						Must: mustFilters,
+					},
+				},
+				Query: &es.FilterQuery{
+					QueryString: *query,
+				},
+			},
+		},
+	}
+	s := es.NewSearchContext(*host, *index, search)
 	formatter := createFormatter()
-	for hit := range es.StreamSearch(search) {
+	for hit := range es.StreamSearch(s) {
 		msg, err := newLogMessageFromHit(hit)
 		if err != nil {
 			continue
 		}
 		formatter.Write(msg)
 	}
-
 }
