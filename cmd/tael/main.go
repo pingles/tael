@@ -1,9 +1,9 @@
 package main
 
 import (
-	"errors"
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/pingles/tael"
 	es "github.com/pingles/tael/elasticsearch"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"time"
 )
 
@@ -27,39 +27,6 @@ func createFormatter() Formatter {
 	return &StandardFormatter{}
 }
 
-type logMessage struct {
-	Message   string
-	Timestamp time.Time
-	LevelName string
-	LogName   string
-}
-func newLogMessageFromHit(hit *es.Hit) (*logMessage, error) {
-	t, err := time.Parse("2006-01-02T15:04:05.000Z", hit.Source["@timestamp"].(string))
-	if err != nil {
-		return nil, err
-	}
-
-	message, ok := hit.Source["message"]
-	if !ok {
-		return nil, errors.New("no message")
-	}
-	log, ok := hit.Source["logname"]
-	if !ok {
-		return nil, errors.New("no logname")
-	}
-	level, ok := hit.Source["level_name"]
-	if !ok {
-		return nil, errors.New("no level")
-	}
-
-	return &logMessage{
-		Message: message.(string),
-		Timestamp: t,
-		LogName: log.(string),
-		LevelName: level.(string),
-	}, nil
-}
-
 func main() {
 	kingpin.Parse()
 	if *host == "" {
@@ -70,18 +37,18 @@ func main() {
 	i := 0
 	for fieldName, fieldQuery := range *filters {
 		mustFilters[i] = &es.MustQuery{
-			Field: fieldName,
+			Field:     fieldName,
 			MatchType: es.MatchPhrase,
-			Query: fieldQuery,
+			Query:     fieldQuery,
 		}
 		i = i + 1
 	}
 
 	earliest := time.Now().Add(-15 * time.Minute)
 	rangeFilter := &es.MustRange{
-		Field: "@timestamp",
+		Field:  "@timestamp",
 		Format: es.RangeTimeEpoch,
-		Gte: es.EpochMillis(earliest),
+		Gte:    es.EpochMillis(earliest),
 	}
 	mustFilters = append(mustFilters, rangeFilter)
 
@@ -107,7 +74,7 @@ func main() {
 	s := es.NewSearchContext(*host, *index, search)
 	formatter := createFormatter()
 	for hit := range es.StreamSearch(s) {
-		msg, err := newLogMessageFromHit(hit)
+		msg, err := tael.NewLogMessageFromHit(hit)
 		if err != nil {
 			continue
 		}
