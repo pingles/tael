@@ -1,42 +1,20 @@
 package elasticsearch
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/willf/bloom"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
-type LogEntry struct {
-	Id            string    `json:"id"`
-	Time          time.Time `json:"@timestamp"`
-	Message       string    `json:"message"`
-	LevelName     string    `json:"level_name"`
-	Level         int       `json:"level"`
-	ImageName     string    `json:"image_name"`
-	ContainerName string    `json:"container_name"`
-	LogName       string    `json:"logname"`
-}
-
-func (e *LogEntry) Header() string {
-	return fmt.Sprintf("%s: %-34s [%-5s]", e.Id, e.Time, strings.ToUpper(e.LevelName))
-}
-
-func (e *LogEntry) String() string {
-	return fmt.Sprintf("%s %s", e.Header(), e.Message)
-}
-
-
-
 type Hit struct {
-	Index  string   `json:"_index"`
-	Type   string   `json:"_type"`
-	Id     string   `json:"_id"`
-	Score  float32  `json:"_score"`
+	Index  string                 `json:"_index"`
+	Type   string                 `json:"_type"`
+	Id     string                 `json:"_id"`
+	Score  float32                `json:"_score"`
 	Source map[string]interface{} `json:"_source"`
 }
 
