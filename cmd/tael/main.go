@@ -1,8 +1,9 @@
 package main
 
 import (
+	"errors"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"github.com/pingles/tael"
+	es "github.com/pingles/tael/elasticsearch"
 	"time"
 )
 
@@ -32,17 +33,30 @@ type logMessage struct {
 	LevelName string
 	LogName   string
 }
-func newLogMessageFromHit(hit *tael.Hit) (*logMessage, error) {
+func newLogMessageFromHit(hit *es.Hit) (*logMessage, error) {
 	t, err := time.Parse("2006-01-02T15:04:05.000Z", hit.Source["@timestamp"].(string))
 	if err != nil {
 		return nil, err
 	}
 
+	message, ok := hit.Source["message"]
+	if !ok {
+		return nil, errors.New("no message")
+	}
+	log, ok := hit.Source["logname"]
+	if !ok {
+		return nil, errors.New("no logname")
+	}
+	level, ok := hit.Source["level_name"]
+	if !ok {
+		return nil, errors.New("no level")
+	}
+
 	return &logMessage{
-		Message: hit.Source["message"].(string),
+		Message: message.(string),
 		Timestamp: t,
-		LogName: hit.Source["logname"].(string),
-		LevelName: hit.Source["level_name"].(string),
+		LogName: log.(string),
+		LevelName: level.(string),
 	}, nil
 }
 
@@ -55,18 +69,18 @@ func main() {
 		kingpin.FatalUsage("host cannot be blank.")
 	}
 
-	var search *tael.Search
+	var search *es.Search
 	if len(*filters) == 0 {
-		search = tael.NewSearch(*host, *index, *query, time.Now())
+		search = es.NewSearch(*host, *index, *query, time.Now())
 	} else {
-		search = tael.NewSearchWithFilters(*host, *index, *query, time.Now(), *filters)
+		search = es.NewSearchWithFilters(*host, *index, *query, time.Now(), *filters)
 	}
 
 	formatter := createFormatter()
-	for hit := range tael.StreamSearch(search) {
+	for hit := range es.StreamSearch(search) {
 		msg, err := newLogMessageFromHit(hit)
 		if err != nil {
-			panic(err)
+			continue
 		}
 		formatter.Write(msg)
 	}
