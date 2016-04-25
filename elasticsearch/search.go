@@ -6,6 +6,7 @@ import (
 	"io"
 	"encoding/json"
 	"bytes"
+	"time"
 )
 
 
@@ -16,7 +17,7 @@ type MustFilter interface {
 }
 
 const (
-	RangeFormat = "epoch_millis"
+	RangeTimeEpoch = "epoch_millis"
 )
 
 type MustRange struct {
@@ -24,6 +25,10 @@ type MustRange struct {
 	Format string
 	Lte    interface{}
 	Gte    interface{}
+}
+
+func EpochMillis(t time.Time) int64 {
+	return t.UnixNano() / 1000000
 }
 
 func (q *MustRange) MarshalJSON() ([]byte, error) {

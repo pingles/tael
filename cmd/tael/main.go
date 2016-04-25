@@ -77,6 +77,14 @@ func main() {
 		i = i + 1
 	}
 
+	earliest := time.Now().Add(-15 * time.Minute)
+	rangeFilter := &es.MustRange{
+		Field: "@timestamp",
+		Format: es.RangeTimeEpoch,
+		Gte: es.EpochMillis(earliest),
+	}
+	mustFilters = append(mustFilters, rangeFilter)
+
 	search := &es.Search{
 		Size: es.DefaultSize,
 		Sort: &es.Sort{
