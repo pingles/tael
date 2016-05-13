@@ -18,7 +18,7 @@ $ tael -f ioexception
 ### Full usage:
 
 ```
-usage: tael [<flags>] [<query>]
+usage: tael [<flags>] [<filter>...]
 
 Flags:
       --help           Show context-sensitive help (also try --help-long and --help-man).
@@ -28,9 +28,10 @@ Flags:
   -n, --number=10      number of results to retrieve
   -j, --json           output as json
   -l, --layout=LAYOUT  custom templated output
+      --query="*"      elasticsearch query
 
 Args:
-  [<query>]  elasticsearch query
+  [<filter>]  field filter, name=value
 ```
 
 ## Configuring
